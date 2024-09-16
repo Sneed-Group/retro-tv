@@ -1,4 +1,5 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -192,7 +193,7 @@
         1: [
           "PLkqz3S84Tw-Qjyd_zHSVH_Xj6ge7yrgYI",
           "PLyqXsO_d0hU1EqKKNY2MdtiXitI3zEVqg",
-        ], //Music Videos
+        ], // Music Videos
         2: [
           "PLLhOnau-tupS1uJF-6SHFRPNDqrvcQsnc",
           "PLLhOnau-tupTeyt7V4BOZzc63yqllmDby",
@@ -200,20 +201,20 @@
           "PLJSbvg4_KfkCZ9GxsUCHc4doMaQ-ZQ9UO",
           "PLD1hDvGYwRsluX5WL_S20DavW1ohjRvsU",
           "PL05oc_DvQQLvIhxRZoJ2v_08wHce2O6c3",
-        ], //Toons
+        ], // Cartoons
         3: [
           "PLI1yx5Z0Lrv4fzJh7ad10OoTZ408ljINP",
           "PLjnxKUEccrT8FHdTMNtsF1XDO2_Cq24Vj",
           "PL796O67kawuDmkDVNsRnjroNGxCjMxqeR",
-        ], //News
-        4: [],
+        ], // News
+        4: [], // Apple II
         5: [
           "PLKPgrxy3ZOA5i-cOBV0Kx6JwmP0MpB0b_",
           "PLZwyeleffqk7xGhVP33jpNzIbCF_co0dv",
           "PLB42D4A12C6D49C07",
           "PL8idQSQ14lemFAYojwp5tiREGA01oOXrw",
-        ], //Red Dwarf
-        6: []
+        ], // Red Dwarf
+        6: [], // BBC Ceefax
       };
 
       let player;
@@ -247,11 +248,30 @@
       }
 
       function onPlayerStateChange(event) {
-        console.log("Player state changed to:", event.data);
-        if (event.data == YT.PlayerState.ENDED) {
-          console.log("Video ended, playing next video in playlist");
-          player.nextVideo();
-        } else if (event.data == YT.PlayerState.PLAYING) {
+        if (event.data === YT.PlayerState.ENDED) {
+          currentVideoIndex++;
+          if (currentVideoIndex >= channelPlaylists[currentChannel].length) {
+            console.log(
+              "All videos in the playlist exhausted. Loading next playlist."
+            );
+            currentPlaylistIndex++;
+            currentVideoIndex = 0;
+            if (
+              currentPlaylistIndex >= channelPlaylists[currentChannel].length
+            ) {
+              console.log(
+                "All playlists exhausted. Restarting from the beginning."
+              );
+              currentPlaylistIndex = 0; // Restart from the beginning
+            }
+            playNextVideo(); // Load the next playlist
+          } else {
+            const nextVideoId =
+              channelPlaylists[currentChannel][currentVideoIndex];
+            console.log(`Playing next video: ${nextVideoId}`);
+            player.cueVideoById(nextVideoId, 0);
+          }
+        } else if (event.data === YT.PlayerState.PLAYING) {
           console.log("Video started playing, hiding flux capacitor");
           hideFluxCapacitor();
         }
@@ -272,13 +292,13 @@
         console.log("Page loaded");
       });
 
-      const simulateChannelChange = () => {
+      function simulateChannelChange() {
         const tvStatic = document.querySelector(".tv-static");
         tvStatic.style.opacity = "0.5";
         setTimeout(() => {
           tvStatic.style.opacity = "0.1";
         }, 300);
-      };
+      }
 
       function showFluxCapacitor() {
         document.getElementById("player").style.display = "none";
@@ -290,61 +310,154 @@
         document.getElementById("player").style.display = "block";
       }
 
+      let currentPlaylistIndex = 0; // Index for playlists
+      let currentVideoIndex = 0; // Index for videos within the playlist
+
       function playNextVideo() {
         if (
-          channelPlaylists[currentChannel] &&
-          channelPlaylists[currentChannel].length > 0
+          !channelPlaylists[currentChannel] ||
+          channelPlaylists[currentChannel].length === 0
         ) {
-          showFluxCapacitor();
-          const playlistId = channelPlaylists[currentChannel][0];
-          if (player && player.loadPlaylist) {
+          console.log("No playlists available for channel:", currentChannel);
+          hideFluxCapacitor();
+          return;
+        }
+
+        const playlists = channelPlaylists[currentChannel];
+        const playlistId = playlists[currentPlaylistIndex];
+
+        // Helper function to load the playlist
+        const loadPlaylist = () => {
+          console.log(`Loading playlist: ${playlistId}`);
+          try {
             player.loadPlaylist({
               list: playlistId,
               listType: "playlist",
-              index: 0,
+              index: currentVideoIndex,
               startSeconds: 0,
               suggestedQuality: "default",
             });
-            console.log("loadPlaylist called with:", playlistId);
-          } else {
-            console.error("Player or loadPlaylist function is not available");
+            console.log("cuePlaylist called with:", playlistId);
+          } catch (error) {
+            console.error(`Error loading playlist ${playlistId}: ${error}`);
+            // Try the next playlist if an error occurs
+            currentPlaylistIndex++;
+            if (currentPlaylistIndex >= playlists.length) {
+              console.log(
+                "All playlists exhausted. Restarting from the beginning."
+              );
+              currentPlaylistIndex = 0; // Restart from the beginning
+            }
+            loadPlaylist();
+          }
+        };
+
+        // Helper function to handle video end and loading next video
+        const onPlayerStateChange = (event) => {
+          if (event.data === YT.PlayerState.ENDED) {
+            currentVideoIndex++;
+            if (currentVideoIndex >= player.getPlaylist().length) {
+              console.log(
+                "All videos in the playlist exhausted. Loading next playlist."
+              );
+              currentPlaylistIndex++;
+              currentVideoIndex = 0;
+              if (currentPlaylistIndex >= playlists.length) {
+                console.log(
+                  "All playlists exhausted. Restarting from the beginning."
+                );
+                currentPlaylistIndex = 0; // Restart from the beginning
+              }
+              loadPlaylist();
+            } else {
+              player.nextVideo(); // Move to next video in the playlist
+            }
+          } else if (event.data === YT.PlayerState.PLAYING) {
+            console.log("Video started playing, hiding flux capacitor");
             hideFluxCapacitor();
           }
-          simulateChannelChange();
-        } else {
-          console.log("No playlists available for channel:", currentChannel);
+        };
+
+        showFluxCapacitor();
+        loadPlaylist(); // Load the current playlist
+      }
+
+      // Set up event listener for player state changes
+      function onPlayerStateChange(event) {
+        if (event.data === YT.PlayerState.ENDED) {
+          currentVideoIndex++;
+          if (currentVideoIndex >= player.getPlaylist().length) {
+            console.log(
+              "All videos in the playlist exhausted. Loading next playlist."
+            );
+            currentPlaylistIndex++;
+            currentVideoIndex = 0;
+            if (
+              currentPlaylistIndex >= channelPlaylists[currentChannel].length
+            ) {
+              console.log(
+                "All playlists exhausted. Restarting from the beginning."
+              );
+              currentPlaylistIndex = 0; // Restart from the beginning
+            }
+            playNextVideo(); // Load the next playlist
+          } else {
+            player.nextVideo(); // Move to next video in the playlist
+          }
+        } else if (event.data === YT.PlayerState.PLAYING) {
+          console.log("Video started playing, hiding flux capacitor");
           hideFluxCapacitor();
         }
       }
-      
-      function changeChannel(channelNumber) {
-        if (channelPlaylists[channelNumber]) {
-          currentChannel = channelNumber;
-          document.querySelector(
-            ".channel-info"
-          ).textContent = `CH ${channelNumber}`;
-          simulateChannelChange();
 
-          document.getElementById("player").style.display = "none";
-          document.getElementById("apple2e").style.display = "none";
-          document.getElementById("ceefax").style.display = "none";
-          document.getElementById("flux-capacitor").style.display = "none";
-
-          if (channelNumber === 4) {
-            document.getElementById("apple2e").style.display = "block";
-          } else if (channelNumber === 6) {
-            document.getElementById("ceefax").style.display = "block";
-          } else {
-            if (
-              channelPlaylists[currentChannel] &&
-              channelPlaylists[currentChannel].length > 0
-            ) {
-              showFluxCapacitor();
-              document.getElementById("player").style.display = "block";
-              playNextVideo();
-            }
-          }
+      function playNextVideo() {
+        if (
+          !channelPlaylists[currentChannel] ||
+          channelPlaylists[currentChannel].length === 0
+        ) {
+          console.log("No playlists available for channel:", currentChannel);
+          hideFluxCapacitor();
+          return;
         }
+
+        const playlists = channelPlaylists[currentChannel];
+        const playlistId = playlists[currentPlaylistIndex];
+
+        const onPlayerStateChange = (event) => {
+          if (event.data === YT.PlayerState.ENDED) {
+            currentVideoIndex++;
+            if (currentVideoIndex >= playlists.length) {
+              console.log(
+                "All videos in the playlist exhausted. Loading next playlist."
+              );
+              currentPlaylistIndex++;
+              currentVideoIndex = 0;
+              if (currentPlaylistIndex >= playlists.length) {
+                console.log(
+                  "All playlists exhausted. Restarting from the beginning."
+                );
+                currentPlaylistIndex = 0; // Restart from the beginning
+              }
+            } else {
+              const nextVideoId = playlists[currentVideoIndex];
+              console.log(`Playing next video: ${nextVideoId}`);
+              player.cueVideoById(nextVideoId, 0);
+            }
+          } else if (event.data === YT.PlayerState.PLAYING) {
+            console.log("Video started playing, hiding flux capacitor");
+            hideFluxCapacitor();
+          }
+        };
+
+        showFluxCapacitor();
+
+        // Set event listener for state changes
+        player.addEventListener("onStateChange", onPlayerStateChange);
+
+        // Cue the first video in the playlist
+        const firstVideoId = playlists[currentVideoIndex];
+        console.log(`Playing first video: ${firstVideoId}`);
+        player.cueVideoById(firstVideoId, 0);
       }
 
       function updateCopyright() {
