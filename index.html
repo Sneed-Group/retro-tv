@@ -294,21 +294,22 @@
           channelPlaylists[currentChannel].length > 0
         ) {
           showFluxCapacitor();
-          const playlistId = channelPlaylists[currentChannel][0];
-          if (player && player.loadPlaylist) {
-            player.loadPlaylist({
-              list: playlistId,
-              listType: "playlist",
-              index: 0,
-              startSeconds: 0,
-              suggestedQuality: "default",
-            });
-            console.log("loadPlaylist called with:", playlistId);
-          } else {
-            console.error("Player or loadPlaylist function is not available");
-            hideFluxCapacitor();
-          }
-          simulateChannelChange();
+          channelPlaylists[currentChannel].forEach(function (playlistId) {
+            try {
+              player.loadPlaylist({
+                list: playlistId,
+                listType: "playlist",
+                index: 0,
+                startSeconds: 0,
+                suggestedQuality: "default",
+              });
+              console.log("loadPlaylist called with:", playlistId);
+            } catch (error) {
+              console.error(`Error loading playlist ${error}`);
+              hideFluxCapacitor();
+            }
+            simulateChannelChange();
+          });
         } else {
           console.log("No playlists available for channel:", currentChannel);
           hideFluxCapacitor();
