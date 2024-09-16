@@ -1,4 +1,5 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -192,7 +193,7 @@
         1: [
           "PLkqz3S84Tw-Qjyd_zHSVH_Xj6ge7yrgYI",
           "PLyqXsO_d0hU1EqKKNY2MdtiXitI3zEVqg",
-        ], //Music Videos
+        ], // Music Videos
         2: [
           "PLLhOnau-tupS1uJF-6SHFRPNDqrvcQsnc",
           "PLLhOnau-tupTeyt7V4BOZzc63yqllmDby",
@@ -200,18 +201,20 @@
           "PLJSbvg4_KfkCZ9GxsUCHc4doMaQ-ZQ9UO",
           "PLD1hDvGYwRsluX5WL_S20DavW1ohjRvsU",
           "PL05oc_DvQQLvIhxRZoJ2v_08wHce2O6c3",
-        ], //Toons
+        ], // Cartoons
         3: [
           "PLI1yx5Z0Lrv4fzJh7ad10OoTZ408ljINP",
           "PLjnxKUEccrT8FHdTMNtsF1XDO2_Cq24Vj",
           "PL796O67kawuDmkDVNsRnjroNGxCjMxqeR",
-        ], //News
+        ], // News
+        4: [], // Apple II
         5: [
           "PLKPgrxy3ZOA5i-cOBV0Kx6JwmP0MpB0b_",
           "PLZwyeleffqk7xGhVP33jpNzIbCF_co0dv",
           "PLB42D4A12C6D49C07",
           "PL8idQSQ14lemFAYojwp5tiREGA01oOXrw",
-        ], //Red Dwarf
+        ], // Red Dwarf
+        6: [], // BBC Ceefax
       };
 
       let player;
@@ -246,10 +249,10 @@
 
       function onPlayerStateChange(event) {
         console.log("Player state changed to:", event.data);
-        if (event.data == YT.PlayerState.ENDED) {
+        if (event.data === YT.PlayerState.ENDED) {
           console.log("Video ended, playing next video in playlist");
-          player.nextVideo();
-        } else if (event.data == YT.PlayerState.PLAYING) {
+          playNextVideo();
+        } else if (event.data === YT.PlayerState.PLAYING) {
           console.log("Video started playing, hiding flux capacitor");
           hideFluxCapacitor();
         }
@@ -270,13 +273,13 @@
         console.log("Page loaded");
       });
 
-      const simulateChannelChange = () => {
+      function simulateChannelChange() {
         const tvStatic = document.querySelector(".tv-static");
         tvStatic.style.opacity = "0.5";
         setTimeout(() => {
           tvStatic.style.opacity = "0.1";
         }, 300);
-      };
+      }
 
       function showFluxCapacitor() {
         document.getElementById("player").style.display = "none";
@@ -288,33 +291,45 @@
         document.getElementById("player").style.display = "block";
       }
 
-      function playNextVideo() {
-        if (
-          channelPlaylists[currentChannel] &&
-          channelPlaylists[currentChannel].length > 0
-        ) {
-          showFluxCapacitor();
-          channelPlaylists[currentChannel].forEach(function (playlistId) {
-            try {
-              player.loadPlaylist({
-                list: playlistId,
-                listType: "playlist",
-                index: 0,
-                startSeconds: 0,
-                suggestedQuality: "default",
-              });
-              console.log("loadPlaylist called with:", playlistId);
-            } catch (error) {
-              console.error(`Error loading playlist ${error}`);
-              hideFluxCapacitor();
-            }
-            simulateChannelChange();
-          });
-        } else {
-          console.log("No playlists available for channel:", currentChannel);
-          hideFluxCapacitor();
-        }
-      }
+  function playNextVideo() {
+  if (!channelPlaylists[currentChannel] || channelPlaylists[currentChannel].length === 0) {
+    console.log("No playlists available for channel:", currentChannel);
+    hideFluxCapacitor();
+    return;
+  }
+
+  let playlistIndex = 0;
+
+  // Helper function to load the next playlist
+  const loadNextPlaylist = () => {
+    if (playlistIndex >= channelPlaylists[currentChannel].length) {
+      console.log("All playlists exhausted. Restarting from the beginning.");
+      playlistIndex = 0; // Restart from the beginning
+    }
+
+    const playlistId = channelPlaylists[currentChannel][playlistIndex];
+    console.log(`Attempting to load playlist: ${playlistId}`);
+
+    try {
+      player.loadPlaylist({
+        list: playlistId,
+        listType: "playlist",
+        index: 0,
+        startSeconds: 0,
+        suggestedQuality: "default",
+      });
+      console.log("loadPlaylist called with:", playlistId);
+    } catch (error) {
+      console.error(`Error loading playlist ${playlistId}: ${error}`);
+      playlistIndex++; // Try the next playlist if an error occurs
+      loadNextPlaylist();
+    }
+  };
+
+  showFluxCapacitor();
+  loadNextPlaylist(); // Start with the first playlist
+}
+
 
       function changeChannel(channelNumber) {
         if (channelPlaylists[channelNumber]) {
@@ -328,22 +343,18 @@
           document.getElementById("apple2e").style.display = "none";
           document.getElementById("ceefax").style.display = "none";
           document.getElementById("flux-capacitor").style.display = "none";
-          if (channelNumber == 4) {
-            document.getElementById("player").style.display = "none";
+
+          if (channelNumber === 4) {
             document.getElementById("apple2e").style.display = "block";
-            document.getElementById("ceefax").style.display = "none";
-            document.getElementById("flux-capacitor").style.display = "none";
-          } else if (channelNumber == 6) {
-            document.getElementById("player").style.display = "none";
-            document.getElementById("apple2e").style.display = "none";
+          } else if (channelNumber === 6) {
             document.getElementById("ceefax").style.display = "block";
-            document.getElementById("flux-capacitor").style.display = "none";
           } else {
-            if (channelPlaylists[currentChannel]) {
+            if (
+              channelPlaylists[currentChannel] &&
+              channelPlaylists[currentChannel].length > 0
+            ) {
               showFluxCapacitor();
               document.getElementById("player").style.display = "block";
-              document.getElementById("apple2e").style.display = "none";
-              document.getElementById("ceefax").style.display = "none";
               playNextVideo();
             }
           }
