@@ -291,45 +291,103 @@
         document.getElementById("player").style.display = "block";
       }
 
-  function playNextVideo() {
-  if (!channelPlaylists[currentChannel] || channelPlaylists[currentChannel].length === 0) {
-    console.log("No playlists available for channel:", currentChannel);
-    hideFluxCapacitor();
-    return;
-  }
+      let currentPlaylistIndex = 0; // Index for playlists
+      let currentVideoIndex = 0; // Index for videos within the playlist
 
-  let playlistIndex = 0;
+      function playNextVideo() {
+        if (
+          !channelPlaylists[currentChannel] ||
+          channelPlaylists[currentChannel].length === 0
+        ) {
+          console.log("No playlists available for channel:", currentChannel);
+          hideFluxCapacitor();
+          return;
+        }
 
-  // Helper function to load the next playlist
-  const loadNextPlaylist = () => {
-    if (playlistIndex >= channelPlaylists[currentChannel].length) {
-      console.log("All playlists exhausted. Restarting from the beginning.");
-      playlistIndex = 0; // Restart from the beginning
-    }
+        const playlists = channelPlaylists[currentChannel];
+        const playlistId = playlists[currentPlaylistIndex];
 
-    const playlistId = channelPlaylists[currentChannel][playlistIndex];
-    console.log(`Attempting to load playlist: ${playlistId}`);
+        // Helper function to load the playlist
+        const loadPlaylist = () => {
+          console.log(`Loading playlist: ${playlistId}`);
+          try {
+            player.cuePlaylist({
+              list: playlistId,
+              listType: "playlist",
+              index: currentVideoIndex,
+            });
+            console.log("cuePlaylist called with:", playlistId);
+          } catch (error) {
+            console.error(`Error loading playlist ${playlistId}: ${error}`);
+            // Try the next playlist if an error occurs
+            currentPlaylistIndex++;
+            if (currentPlaylistIndex >= playlists.length) {
+              console.log(
+                "All playlists exhausted. Restarting from the beginning."
+              );
+              currentPlaylistIndex = 0; // Restart from the beginning
+            }
+            loadPlaylist();
+          }
+        };
 
-    try {
-      player.loadPlaylist({
-        list: playlistId,
-        listType: "playlist",
-        index: 0,
-        startSeconds: 0,
-        suggestedQuality: "default",
-      });
-      console.log("loadPlaylist called with:", playlistId);
-    } catch (error) {
-      console.error(`Error loading playlist ${playlistId}: ${error}`);
-      playlistIndex++; // Try the next playlist if an error occurs
-      loadNextPlaylist();
-    }
-  };
+        // Helper function to handle video end and loading next video
+        const onPlayerStateChange = (event) => {
+          if (event.data === YT.PlayerState.ENDED) {
+            currentVideoIndex++;
+            if (currentVideoIndex >= player.getPlaylist().length) {
+              console.log(
+                "All videos in the playlist exhausted. Loading next playlist."
+              );
+              currentPlaylistIndex++;
+              currentVideoIndex = 0;
+              if (currentPlaylistIndex >= playlists.length) {
+                console.log(
+                  "All playlists exhausted. Restarting from the beginning."
+                );
+                currentPlaylistIndex = 0; // Restart from the beginning
+              }
+              loadPlaylist();
+            } else {
+              player.nextVideo(); // Move to next video in the playlist
+            }
+          } else if (event.data === YT.PlayerState.PLAYING) {
+            console.log("Video started playing, hiding flux capacitor");
+            hideFluxCapacitor();
+          }
+        };
 
-  showFluxCapacitor();
-  loadNextPlaylist(); // Start with the first playlist
-}
+        showFluxCapacitor();
+        loadPlaylist(); // Load the current playlist
+      }
 
+      // Set up event listener for player state changes
+      function onPlayerStateChange(event) {
+        if (event.data === YT.PlayerState.ENDED) {
+          currentVideoIndex++;
+          if (currentVideoIndex >= player.getPlaylist().length) {
+            console.log(
+              "All videos in the playlist exhausted. Loading next playlist."
+            );
+            currentPlaylistIndex++;
+            currentVideoIndex = 0;
+            if (
+              currentPlaylistIndex >= channelPlaylists[currentChannel].length
+            ) {
+              console.log(
+                "All playlists exhausted. Restarting from the beginning."
+              );
+              currentPlaylistIndex = 0; // Restart from the beginning
+            }
+            playNextVideo(); // Load the next playlist
+          } else {
+            player.nextVideo(); // Move to next video in the playlist
+          }
+        } else if (event.data === YT.PlayerState.PLAYING) {
+          console.log("Video started playing, hiding flux capacitor");
+          hideFluxCapacitor();
+        }
+      }
 
       function changeChannel(channelNumber) {
         if (channelPlaylists[channelNumber]) {
