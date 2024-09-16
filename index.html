@@ -1,5 +1,6 @@
 <html>
   <head>
+    <base href="https://websimcreationengine.com/retro-tv-experience/" />
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Retro TV Experience</title>
@@ -327,11 +328,24 @@
           document.getElementById("apple2e").style.display = "none";
           document.getElementById("ceefax").style.display = "none";
           document.getElementById("flux-capacitor").style.display = "none";
-
-          if (channelPlaylists[currentChannel]) {
-            showFluxCapacitor();
-            document.getElementById("player").style.display = "block";
-            playNextVideo();
+          if (channelNumber == 4) {
+            document.getElementById("player").style.display = "none";
+            document.getElementById("apple2e").style.display = "block";
+            document.getElementById("ceefax").style.display = "none";
+            document.getElementById("flux-capacitor").style.display = "none";
+          } else if (channelNumber == 6) {
+            document.getElementById("player").style.display = "none";
+            document.getElementById("apple2e").style.display = "none";
+            document.getElementById("ceefax").style.display = "block";
+            document.getElementById("flux-capacitor").style.display = "none";
+          } else {
+            if (channelPlaylists[currentChannel]) {
+              showFluxCapacitor();
+              document.getElementById("player").style.display = "block";
+              document.getElementById("apple2e").style.display = "none";
+              document.getElementById("ceefax").style.display = "none";
+              playNextVideo();
+            }
           }
         }
       }
