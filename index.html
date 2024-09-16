@@ -311,10 +311,12 @@
         const loadPlaylist = () => {
           console.log(`Loading playlist: ${playlistId}`);
           try {
-            player.cuePlaylist({
+            player.loadPlaylist({
               list: playlistId,
               listType: "playlist",
               index: currentVideoIndex,
+              startSeconds: 0,
+              suggestedQuality: "default",
             });
             console.log("cuePlaylist called with:", playlistId);
           } catch (error) {
