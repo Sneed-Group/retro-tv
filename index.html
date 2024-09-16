@@ -1,0 +1,348 @@
+<html>
+  <head>
+    <base href="https://websimcreationengine.com/retro-tv-experience/" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Retro TV Experience</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        background-color: #000;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        font-family: 'VT323', monospace;
+      }
+      h1 {
+        text-align: center;
+        color: #fff;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+      }
+      .tv-container {
+        position: relative;
+        width: 640px;
+        height: 480px;
+      }
+      .tv-frame {
+        position: absolute;
+        top: -30px;
+        left: -30px;
+        right: -30px;
+        bottom: -30px;
+        background: linear-gradient(45deg, #ff00ff, #00ffff);
+        border-radius: 30px;
+        padding: 20px;
+        box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+      }
+      .tv-screen {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        border-radius: 20px;
+        background-color: #000;
+      }
+      #player, #apple2e, #ceefax {
+        width: 100%;
+        height: 100%;
+        border: none;
+      }
+      .tv-reflection {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 100%;
+        background: linear-gradient(to bottom, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0) 100%);
+        pointer-events: none;
+      }
+      .tv-static {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iMzAwIj4KICA8ZmlsdGVyIGlkPSJub2lzZSI+CiAgICA8ZmVUdXJidWxlbmNlIHR5cGU9ImZyYWN0YWxOb2lzZSIgYmFzZUZyZXF1ZW5jeT0iMC42NSIgbnVtT2N0YXZlcz0iMyIgc3RpdGNoVGlsZXM9InN0aXRjaCIvPgogIDwvZmlsdGVyPgogIDxyZWN0IHdpZHRoPSIzMDAiIGhlaWdodD0iMzAwIiBmaWx0ZXI9InVybCgjbm9pc2UpIiBvcGFjaXR5PSIwLjA1Ii8+Cjwvc3ZnPg==');
+        opacity: 0.1;
+        pointer-events: none;
+      }
+      .channel-info {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        color: #fff;
+        font-size: 24px;
+        text-shadow: 2px 2px 2px rgba(0,0,0,0.5);
+      }
+      .remote-control {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: #333;
+        padding: 10px;
+        border-radius: 10px;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+        max-width: 80%;
+      }
+      .remote-button {
+        padding: 10px 20px;
+        font-size: 18px;
+        cursor: pointer;
+        background-color: #444;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+      }
+      #flux-capacitor {
+        display: none;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 200px;
+        height: 200px;
+      }
+      .flux-circle {
+        position: absolute;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background-color: #00ffff;
+        animation: pulse 2s infinite;
+      }
+      .flux-circle:nth-child(1) { top: 0; left: 75px; }
+      .flux-circle:nth-child(2) { bottom: 15px; left: 15px; }
+      .flux-circle:nth-child(3) { bottom: 15px; right: 15px; }
+      .flux-line {
+        position: absolute;
+        width: 4px;
+        background-color: #00ffff;
+        animation: pulse 2s infinite;
+      }
+      .flux-line:nth-child(4) { height: 115px; top: 50px; left: 98px; }
+      .flux-line:nth-child(5) { height: 100px; bottom: 50px; left: 48px; transform: rotate(60deg); }
+      .flux-line:nth-child(6) { height: 100px; bottom: 50px; right: 48px; transform: rotate(-60deg); }
+      @keyframes pulse {
+        0%, 100% { opacity: 0.5; }
+        50% { opacity: 1; }
+      }
+    </style>
+  </head>
+  <body>
+    <h1>The Retro TV Experience!</h1>
+    <div class="tv-container">
+      <div class="tv-frame">
+        <div class="tv-screen">
+          <div id="player"></div>
+          <iframe
+            id="apple2e"
+            style="display:none;"
+            src="https://www.scullinsteel.com/apple2/"
+          ></iframe>
+          <iframe
+            id="ceefax"
+            style="display:none;"
+            src="https://www.nathanmediaservices.co.uk/teletext-viewer/"
+          ></iframe>
+          <div id="flux-capacitor">
+            <div class="flux-circle"></div>
+            <div class="flux-circle"></div>
+            <div class="flux-circle"></div>
+            <div class="flux-line"></div>
+            <div class="flux-line"></div>
+            <div class="flux-line"></div>
+          </div>
+          <div class="tv-reflection"></div>
+          <div class="tv-static"></div>
+          <div class="channel-info">CH 1</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="remote-control">
+      <button class="remote-button" onclick="changeChannel(1)">
+        Music Videos
+      </button>
+      <button class="remote-button" onclick="changeChannel(2)">Cartoons</button>
+      <button class="remote-button" onclick="changeChannel(3)">News</button>
+      <button class="remote-button" onclick="changeChannel(4)">Apple II</button>
+      <button class="remote-button" onclick="changeChannel(5)">
+        Red Dwarf
+      </button>
+      <button class="remote-button" onclick="changeChannel(6)">
+        BBC Ceefax
+      </button>
+    </div>
+
+    <hr style="margin-top: 20px; border-color: #444;" />
+    <p
+      id="copyright"
+      style="text-align: center; color: #fff; font-size: 14px; margin-top: 10px;"
+    ></p>
+
+    <script src="https://www.youtube.com/iframe_api"></script>
+    <script>
+      const channelPlaylists = {
+        1: [
+          "PLkqz3S84Tw-Qjyd_zHSVH_Xj6ge7yrgYI",
+          "PLyqXsO_d0hU1EqKKNY2MdtiXitI3zEVqg",
+        ], //Music Videos
+        2: [
+          "PLLhOnau-tupS1uJF-6SHFRPNDqrvcQsnc",
+          "PLLhOnau-tupTeyt7V4BOZzc63yqllmDby",
+          "PLiVIOBpvo_hjOIeECWzozA6fKx32oohus",
+          "PLJSbvg4_KfkCZ9GxsUCHc4doMaQ-ZQ9UO",
+          "PLD1hDvGYwRsluX5WL_S20DavW1ohjRvsU",
+          "PL05oc_DvQQLvIhxRZoJ2v_08wHce2O6c3",
+        ], //Toons
+        3: [
+          "PLI1yx5Z0Lrv4fzJh7ad10OoTZ408ljINP",
+          "PLjnxKUEccrT8FHdTMNtsF1XDO2_Cq24Vj",
+          "PL796O67kawuDmkDVNsRnjroNGxCjMxqeR",
+        ], //News
+        5: [
+          "PLKPgrxy3ZOA5i-cOBV0Kx6JwmP0MpB0b_",
+          "PLZwyeleffqk7xGhVP33jpNzIbCF_co0dv",
+          "PLB42D4A12C6D49C07",
+          "PL8idQSQ14lemFAYojwp5tiREGA01oOXrw",
+        ], //Red Dwarf
+      };
+
+      let player;
+      let currentChannel = 1;
+
+      function onYouTubeIframeAPIReady() {
+        player = new YT.Player("player", {
+          height: "100%",
+          width: "100%",
+          playerVars: {
+            autoplay: 1,
+            controls: 0,
+            showinfo: 0,
+            modestbranding: 1,
+            loop: 1,
+            fs: 0,
+            cc_load_policy: 0,
+            iv_load_policy: 3,
+            autohide: 0,
+          },
+          events: {
+            onReady: onPlayerReady,
+            onStateChange: onPlayerStateChange,
+            onError: onPlayerError,
+          },
+        });
+      }
+
+      function onPlayerReady(event) {
+        changeChannel(1);
+      }
+
+      function onPlayerStateChange(event) {
+        console.log("Player state changed to:", event.data);
+        if (event.data == YT.PlayerState.ENDED) {
+          console.log("Video ended, playing next video in playlist");
+          player.nextVideo();
+        } else if (event.data == YT.PlayerState.PLAYING) {
+          console.log("Video started playing, hiding flux capacitor");
+          hideFluxCapacitor();
+        }
+      }
+
+      function onPlayerError(event) {
+        console.log("YouTube player error:", event.data);
+        hideFluxCapacitor();
+      }
+
+      window.addEventListener("load", () => {
+        if (typeof YT !== "undefined" && YT.Player) {
+          onYouTubeIframeAPIReady();
+        } else {
+          setTimeout(onYouTubeIframeAPIReady, 1000);
+        }
+        updateCopyright();
+        console.log("Page loaded");
+      });
+
+      const simulateChannelChange = () => {
+        const tvStatic = document.querySelector(".tv-static");
+        tvStatic.style.opacity = "0.5";
+        setTimeout(() => {
+          tvStatic.style.opacity = "0.1";
+        }, 300);
+      };
+
+      function showFluxCapacitor() {
+        document.getElementById("player").style.display = "none";
+        document.getElementById("flux-capacitor").style.display = "block";
+      }
+
+      function hideFluxCapacitor() {
+        document.getElementById("flux-capacitor").style.display = "none";
+        document.getElementById("player").style.display = "block";
+      }
+
+      function playNextVideo() {
+        if (
+          channelPlaylists[currentChannel] &&
+          channelPlaylists[currentChannel].length > 0
+        ) {
+          showFluxCapacitor();
+          const playlistId = channelPlaylists[currentChannel][0];
+          if (player && player.loadPlaylist) {
+            player.loadPlaylist({
+              list: playlistId,
+              listType: "playlist",
+              index: 0,
+              startSeconds: 0,
+              suggestedQuality: "default",
+            });
+            console.log("loadPlaylist called with:", playlistId);
+          } else {
+            console.error("Player or loadPlaylist function is not available");
+            hideFluxCapacitor();
+          }
+          simulateChannelChange();
+        } else {
+          console.log("No playlists available for channel:", currentChannel);
+          hideFluxCapacitor();
+        }
+      }
+
+      function changeChannel(channelNumber) {
+        if (channelPlaylists[channelNumber]) {
+          currentChannel = channelNumber;
+          document.querySelector(
+            ".channel-info"
+          ).textContent = `CH ${channelNumber}`;
+          simulateChannelChange();
+
+          document.getElementById("player").style.display = "none";
+          document.getElementById("apple2e").style.display = "none";
+          document.getElementById("ceefax").style.display = "none";
+          document.getElementById("flux-capacitor").style.display = "none";
+
+          if (channelPlaylists[currentChannel]) {
+            showFluxCapacitor();
+            document.getElementById("player").style.display = "block";
+            playNextVideo();
+          }
+        }
+      }
+
+      function updateCopyright() {
+        const currentYear = new Date().getFullYear();
+        document.getElementById(
+          "copyright"
+        ).textContent = `© ${currentYear} Sneed Group. All rights reserved.`;
+      }
+    </script>
+  </body>
+</html>
